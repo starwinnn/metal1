@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>长江有色金属价格追踪</title>
+    
+    <!-- PWA相关meta标签 -->
+    <meta name="description" content="长江有色金属价格追踪系统，支持添加金属价格、查看走势图、导入导出数据">
+    <meta name="theme-color" content="#2c6e91">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="金属价格追踪">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- 添加到主屏幕图标 -->
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c6e91' width='192' height='192' rx='20'/><text x='96' y='110' font-family='Arial' font-size='60' fill='white' text-anchor='middle'>Cu</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c6e91' width='192' height='192' rx='20'/><text x='96' y='110' font-family='Arial' font-size='60' fill='white' text-anchor='middle'>Cu</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle fill='%232c6e91' cx='16' cy='16' r='14'/><text x='16' y='22' font-family='Arial' font-size='16' fill='white' text-anchor='middle'>Cu</text></svg>">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{&#34;name&#34;:&#34;长江有色金属价格追踪&#34;,&#34;short_name&#34;:&#34;金属追踪&#34;,&#34;description&#34;:&#34;专业的金属价格追踪管理系统&#34;,&#34;start_url&#34;:&#34;.&#34;,&#34;display&#34;:&#34;standalone&#34;,&#34;background_color&#34;:&#34;#f5f7fa&#34;,&#34;theme_color&#34;:&#34;#2c6e91&#34;,&#34;icons&#34;:[{&#34;src&#34;:&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%232c6e91' width='192' height='192' rx='20'/%3E%3Ctext x='96' y='110' font-family='Arial' font-size='60' fill='white' text-anchor='middle'%3ECu%3C/text%3E%3C/svg%3E&#34;,&#34;sizes&#34;:&#34;192x192&#34;,&#34;type&#34;:&#34;image/svg+xml&#34;},{&#34;src&#34;:&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%232c6e91' width='512' height='512' rx='60'/%3E%3Ctext x='256' y='290' font-family='Arial' font-size='160' fill='white' text-anchor='middle'%3ECu%3C/text%3E%3C/svg%3E&#34;,&#34;sizes&#34;:&#34;512x512&#34;,&#34;type&#34;:&#34;image/svg+xml&#34;}]}">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c6e91 0%, #4a90e2 100%);
+            color: white;
+            padding: 18px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header h1 i {
+            font-size: 1.3rem;
+        }
+        
+        .website-link {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        
+        .website-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .install-prompt {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            margin: 10px 20px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideDown 0.3s ease;
+        }
+        
+        .install-prompt.show {
+            display: flex;
+        }
+        
+        .install-prompt-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .install-prompt-icon {
+            font-size: 1.5rem;
+        }
+        
+        .install-prompt-text h3 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        
+        .install-prompt-text p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        .install-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .install-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .close-prompt {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #3a7bc8;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background: #d68910;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .metal-list {
+            margin-top: 20px;
+        }
+        
+        .metal-item {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .metal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .metal-name {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #2c3e50;
+        }
+        
+        .metal-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c6e91;
+        }
+        
+        .metal-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .change {
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .change.positive {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+        
+        .change.negative {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+        
+        .change.neutral {
+            background-color: rgba(149, 165, 166, 0.1);
+            color: #95a5a6;
+        }
+        
+        .chart-container {
+            margin-top: 15px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .chart-toggle {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .chart-toggle-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chart-toggle-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .metal-category {
+            display: inline-block;
+            background: #e8f4fc;
+            color: #2c6e91;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .metal-category:hover {
+            background: #d4e9fa;
+            transform: translateY(-2px);
+        }
+        
+        .date-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-input {
+            flex: 1;
+        }
+        
+        .today-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .today-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .data-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #4a90e2;
+            color: #4a90e2;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #2980b9;
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c6e91;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .website-link {
+                align-self: flex-start;
+            }
+            
+            .metal-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .metal-price {
+                align-self: flex-end;
+                margin-top: -30px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .install-prompt {
+                margin: 10px 15px;
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .install-prompt-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 安装提示 -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-prompt-content">
+            <div class="install-prompt-icon">
+                <i class="fas fa-download"></i>
+            </div>
+            <div class="install-prompt-text">
+                <h3>添加到桌面</h3>
+                <p>将此应用安装到手机桌面，方便快速访问</p>
+            </div>
+        </div>
+        <div>
+            <button id="installBtn" class="install-btn">安装</button>
+            <button id="closePrompt" class="close-prompt">&times;</button>
+        </div>
+    </div>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-chart-line"></i> 长江有色金属价格追踪</h1>
+            <a href="https://www.ccmn.cn/" target="_blank" class="website-link">
+                <i class="fas fa-external-link-alt"></i> 访问官网
+            </a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="tab-container">
+            <div class="tab active" data-tab="add">添加价格</div>
+            <div class="tab" data-tab="list">价格列表</div>
+            <div class="tab" data-tab="manage">数据管理</div>
+        </div>
+        
+        <div id="addTab" class="tab-content active">
+            <div class="card">
+                <h2>添加金属价格</h2>
+                <form id="metalForm">
+                    <div class="form-group">
+                        <label for="metalName">金属类别</label>
+                        <input type="text" id="metalName" class="form-control" placeholder="例如: 铜、铝、锌、铅、镍" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="priceDate">价格日期</label>
+                        <div class="date-selector">
+                            <input type="date" id="priceDate" class="form-control date-input" required>
+                            <button type="button" id="todayBtn" class="today-btn">今天</button>
+                        </div>
+                        <div class="info-text">选择历史日期可添加过去的价格数据</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="metalPrice">均价 (元/吨)</label>
+                        <input type="number" id="metalPrice" class="form-control" placeholder="请输入当前价格" step="0.01" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-block">
+                        <i class="fas fa-plus-circle"></i> 添加金属价格
+                    </button>
+                </form>
+                
+                <div class="data-actions">
+                    <button id="resetBtn" class="btn btn-danger btn-small">
+                        <i class="fas fa-redo"></i> 重置所有数据
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>常用金属类别</h2>
+                <div id="categoryList">
+                    <span class="metal-category">铜</span>
+                    <span class="metal-category">铝</span>
+                    <span class="metal-category">锌</span>
+                    <span class="metal-category">铅</span>
+                    <span class="metal-category">镍</span>
+                    <span class="metal-category">锡</span>
+                    <span class="metal-category">黄金</span>
+                    <span class="metal-category">白银</span>
+                </div>
+                <p style="margin-top: 15px; color: #7f8c8d; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> 点击上方类别快速填充金属名称
+                </p>
+            </div>
+            
+            <!-- 添加使用说明 -->
+            <div class="instructions">
+                <h3><i class="fas fa-mobile-alt"></i> 如何添加到桌面</h3>
+                <ol>
+                    <li><strong>iOS Safari:</strong> 点击底部 <i class="fas fa-share"></i> 分享按钮 → 选择"添加到主屏幕"</li>
+                    <li><strong>Android Chrome:</strong> 点击右上角 <i class="fas fa-ellipsis-v"></i> 菜单 → 选择"添加到主屏幕"</li>
+                    <li><strong>其他浏览器:</strong> 查找"添加到桌面"或"安装应用"选项</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div id="listTab" class="tab-content">
+            <div class="card">
+                <h2>金属价格列表</h2>
+                <div id="metalList" class="metal-list">
+                    <div id="emptyState" class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>暂无金属价格数据</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">请添加金属价格数据以开始追踪</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="manageTab" class="tab-content">
+            <div class="card">
+                <h2>数据导入导出</h2>
+                <p style="margin-bottom: 20px; color: #555;">
+                    通过JSON文件导入导出数据，方便用户之间共享数据。
+                </p>
+                
+                <div class="btn-group">
+                    <button id="exportBtn" class="btn btn-warning">
+                        <i class="fas fa-file-export"></i> 导出数据为JSON
+                    </button>
+                    
+                    <div class="file-input-wrapper">
+                        <input type="file" id="importFile" accept=".json">
+                        <label for="importFile" class="file-input-label">
+                            <i class="fas fa-file-import"></i> 从JSON文件导入
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;"><i class="fas fa-info-circle"></i> 使用说明</h3>
+                    <ul style="padding-left: 20px; font-size: 0.9rem; color: #555;">
+                        <li>添加价格时可以选择任意日期，包括过去日期</li>
+                        <li>相同金属、相同日期的价格会被更新，不会重复添加</li>
+                        <li>使用"导出数据"功能可将数据保存为JSON文件</li>
+                        <li>通过"从JSON文件导入"可以加载他人分享的数据</li>
+                        <li>数据在浏览器刷新后会保留（自动保存）</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 金属数据存储
+        let metalData = JSON.parse(localStorage.getItem('metalPriceData')) || [];
+        
+        // PWA安装相关变量
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const closePrompt = document.getElementById('closePrompt');
+        
+        // DOM元素
+        const metalForm = document.getElementById('metalForm');
+        const metalNameInput = document.getElementById('metalName');
+        const metalPriceInput = document.getElementById('metalPrice');
+        const priceDateInput = document.getElementById('priceDate');
+        const todayBtn = document.getElementById('todayBtn');
+        const metalList = document.getElementById('metalList');
+        const emptyState = document.getElementById('emptyState');
+        const resetBtn = document.getElementById('resetBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const importFile = document.getElementById('importFile');
+        const categoryList = document.getElementById('categoryList');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // 初始化日期选择器为今天
+        function setTodayDate() {
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            priceDateInput.value = formattedDate;
+            priceDateInput.max = formattedDate; // 不允许选择未来日期
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTodayDate();
+            renderMetalList();
+            setupCategoryClicks();
+            setupTabs();
+            setupPWA();
+            
+            // 如果本地有数据，隐藏空状态
+            if (metalData.length > 0) {
+                emptyState.style.display = 'none';
+            }
+            
+            // 延迟显示安装提示
+            setTimeout(() => {
+                if (deferredPrompt && !localStorage.getItem('installPromptDismissed')) {
+                    installPrompt.classList.add('show');
+                }
+            }, 3000);
+        });
+        
+        // 设置PWA功能
+        function setupPWA() {
+            // 监听beforeinstallprompt事件
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // 阻止自动显示提示
+                e.preventDefault();
+                // 保存事件以便后续触发
+                deferredPrompt = e;
+                
+                // 显示自定义安装提示
+                if (!localStorage.getItem('installPromptDismissed')) {
+                    setTimeout(() => {
+                        installPrompt.classList.add('show');
+                    }, 3000);
+                }
+            });
+            
+            // 安装按钮点击事件
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // 显示安装提示
+                    deferredPrompt.prompt();
+                    // 等待用户选择
+                    const { outcome } = await deferredPrompt.userChoice;
+                    // 清除保存的提示
+                    deferredPrompt = null;
+                    // 隐藏自定义提示
+                    installPrompt.classList.remove('show');
+                    
+                    if (outcome === 'accepted') {
+                        showNotification('应用已添加到桌面！', 'success');
+                    }
+                }
+            });
+            
+            // 关闭提示按钮
+            closePrompt.addEventListener('click', () => {
+                installPrompt.classList.remove('show');
+                localStorage.setItem('installPromptDismissed', 'true');
+            });
+            
+            // 监听appinstalled事件
+            window.addEventListener('appinstalled', () => {
+                console.log('应用已安装到桌面');
+                showNotification('应用安装成功！', 'success');
+            });
+        }
+        
+        // 设置标签页切换
+        function setupTabs() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // 更新活动标签
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // 显示对应内容
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId + 'Tab').classList.add('active');
+                });
+            });
+        }
+        
+        // 今天按钮点击事件
+        todayBtn.addEventListener('click', setTodayDate);
+        
+        // 表单提交事件
+        metalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = metalNameInput.value.trim();
+            const price = parseFloat(metalPriceInput.value);
+            const dateStr = priceDateInput.value;
+            
+            if (!name || isNaN(price) || price <= 0 || !dateStr) {
+                alert('请输入有效的金属名称、价格和日期');
+                return;
+            }
+            
+            const date = new Date(dateStr + 'T00:00:00');
+            
+            // 查找是否已存在该金属的相同日期记录
+            const existingMetalIndex = metalData.findIndex(metal => metal.name === name);
+            
+            if (existingMetalIndex !== -1) {
+                // 查找该金属是否有相同日期的记录
+                const sameDateIndex = metalData[existingMetalIndex].history.findIndex(
+                    entry => new Date(entry.date).toDateString() === date.toDateString()
+                );
+                
+                if (sameDateIndex !== -1) {
+                    // 更新相同日期的记录
+                    const previousIndex = sameDateIndex > 0 ? sameDateIndex - 1 : null;
+                    const previousPrice = previousIndex !== null ? 
+                        metalData[existingMetalIndex].history[previousIndex].price : 
+                        metalData[existingMetalIndex].history[sameDateIndex].price;
+                    
+                    const change = calculateChange(price, previousPrice);
+                    
+                    // 更新历史记录
+                    metalData[existingMetalIndex].history[sameDateIndex] = {
+                        date: date.toISOString(),
+                        price: price
+                    };
+                    
+                    // 如果更新的是最新记录，则更新当前价格
+                    if (sameDateIndex === metalData[existingMetalIndex].history.length - 1) {
+                        metalData[existingMetalIndex].currentPrice = price;
+                        metalData[existingMetalIndex].lastUpdate = date.toISOString();
+                        metalData[existingMetalIndex].change = change;
+                    }
+                    
+                    showNotification(`已更新 ${name} 在 ${dateStr} 的价格`);
+                } else {
+                    // 添加新日期的记录
+                    const latestRecord = metalData[existingMetalIndex].history[metalData[existingMetalIndex].history.length - 1];
+                    const change = calculateChange(price, latestRecord.price);
+                    
+                    metalData[existingMetalIndex].history.push({
+                        date: date.toISOString(),
+                        price: price
+                    });
+                    
+                    // 按日期排序历史记录
+                    metalData[existingMetalIndex].history.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    
+                    // 如果新日期是最新的，更新当前价格
+                    if (date > new Date(latestRecord.date)) {
+                        metalData[existingMetalIndex].currentPrice = price;
+                        metalData[existingMetalIndex].lastUpdate = date.toISOString();
+                        metalData[existingMetalIndex].change = change;
+                    }
+                    
+                    showNotification(`已添加 ${name} 在 ${dateStr} 的价格`);
+                }
+                
+                // 限制历史记录数量
+                if (metalData[existingMetalIndex].history.length > 50) {
+                    metalData[existingMetalIndex].history = metalData[existingMetalIndex].history.slice(-50);
+                }
+            } else {
+                // 添加新金属
+                const newMetal = {
+                    id: generateId(),
+                    name: name,
+                    currentPrice: price,
+                    lastUpdate: date.toISOString(),
+                    change: 0, // 第一次添加，涨跌为0
+                    history: [{
+                        date: date.toISOString(),
+                        price: price
+                    }]
+                };
+                
+                metalData.push(newMetal);
+                showNotification(`已添加新金属 ${name} 在 ${dateStr} 的价格`);
+            }
+            
+            // 清空表单
+            metalNameInput.value = '';
+            metalPriceInput.value = '';
+            setTodayDate();
+            
+            // 重新渲染列表
+            renderMetalList();
+            
+            // 隐藏空状态
+            emptyState.style.display = 'none';
+            
+            // 自动保存到localStorage
+            saveToLocalStorage();
+            
+            // 切换到列表标签页
+            tabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.tab[data-tab="list"]').classList.add('active');
+            
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('listTab').classList.add('active');
+        });
+        
+        // 重置数据
+        resetBtn.addEventListener('click', function() {
+            if (confirm('确定要重置所有数据吗？此操作不可撤销。')) {
+                metalData = [];
+                localStorage.removeItem('metalPriceData');
+                renderMetalList();
+                emptyState.style.display = 'block';
+                showNotification('所有数据已重置', 'info');
+            }
+        });
+        
+        // 导出数据
+        exportBtn.addEventListener('click', function() {
+            if (metalData.length === 0) {
+                showNotification('没有数据可导出', 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(metalData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `metal_prices_${new Date().toISOString().slice(0, 10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('数据已导出为JSON文件', 'success');
+        });
+        
+        // 导入数据
+        importFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    
+                    // 验证数据格式
+                    if (!Array.isArray(importedData)) {
+                        throw new Error('数据格式不正确');
+                    }
+                    
+                    if (confirm('导入数据将覆盖当前数据，是否继续？')) {
+                        metalData = importedData;
+                        saveToLocalStorage();
+                        renderMetalList();
+                        if (metalData.length > 0) {
+                            emptyState.style.display = 'none';
+                        }
+                        showNotification('数据导入成功', 'success');
+                        
+                        // 切换到列表标签页
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('.tab[data-tab="list"]').classList.add('active');
+                        
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                        });
+                        document.getElementById('listTab').classList.add('active');
+                    }
+                } catch (error) {
+                    showNotification('导入失败：文件格式不正确', 'error');
+                }
+                
+                // 重置文件输入
+                importFile.value = '';
+            };
+            reader.readAsText(file);
+        });
+        
+        // 保存数据到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('metalPriceData', JSON.stringify(metalData));
+        }
+        
+        // 渲染金属列表
+        function renderMetalList() {
+            metalList.innerHTML = '';
+            
+            if (metalData.length === 0) {
+                metalList.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            // 按最后更新时间排序（最新的在前）
+            const sortedData = [...metalData].sort((a, b) => 
+                new Date(b.lastUpdate) - new Date(a.lastUpdate)
+            );
+            
+            sortedData.forEach(metal => {
+                const metalItem = document.createElement('div');
+                metalItem.className = 'metal-item';
+                metalItem.id = `metal-${metal.id}`;
+                
+                const date = new Date(metal.lastUpdate);
+                const dateString = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+                
+                // 计算涨跌百分比
+                const changePercent = metal.change;
+                let changeClass = 'neutral';
+                let changeText = '0.00%';
+                
+                if (changePercent > 0) {
+                    changeClass = 'positive';
+                    changeText = `+${changePercent.toFixed(2)}%`;
+                } else if (changePercent < 0) {
+                    changeClass = 'negative';
+                    changeText = `${changePercent.toFixed(2)}%`;
+                }
+                
+                // 获取历史记录数量
+                const historyCount = metal.history ? metal.history.length : 0;
+                
+                metalItem.innerHTML = `
+                    <div class="metal-header">
+                        <div class="metal-name">${metal.name}</div>
+                        <div class="metal-price">${formatPrice(metal.currentPrice)} 元/吨</div>
+                    </div>
+                    <div class="metal-info">
+                        <div>
+                            <div>最新日期: ${dateString}</div>
+                            <div style="font-size: 0.8rem; color: #95a5a6; margin-top: 2px;">
+                                历史记录: ${historyCount} 条
+                            </div>
+                        </div>
+                        <div class="change ${changeClass}">${changeText}</div>
+                    </div>
+                    <div class="chart-toggle">
+                        <button class="chart-toggle-btn" onclick="toggleChart('${metal.id}')">
+                            <i class="fas fa-chart-line"></i> 查看价格走势图
+                        </button>
+                    </div>
+                    <div id="chart-${metal.id}" class="chart-container" style="display: none;"></div>
+                `;
+                
+                metalList.appendChild(metalItem);
+            });
+        }
+        
+        // 切换图表显示
+        window.toggleChart = function(metalId) {
+            const chartContainer = document.getElementById(`chart-${metalId}`);
+            const toggleBtn = chartContainer.previousElementSibling.querySelector('.chart-toggle-btn');
+            
+            if (chartContainer.style.display === 'none') {
+                chartContainer.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i> 隐藏走势图';
+                renderChart(metalId, chartContainer);
+            } else {
+                chartContainer.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-chart-line"></i> 查看价格走势图';
+            }
+        };
+        
+        // 渲染图表
+        function renderChart(metalId, container) {
+            const metal = metalData.find(m => m.id === metalId);
+            
+            if (!metal || !metal.history || metal.history.length < 2) {
+                container.innerHTML = '<p style="text-align: center; color: #95a5a6; padding: 20px;">暂无足够历史数据绘制图表</p>';
+                return;
+            }
+            
+            // 清空容器
+            container.innerHTML = '<canvas></canvas>';
+            
+            // 按日期排序
+            const sortedHistory = [...metal.history].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // 准备数据
+            const labels = sortedHistory.map(entry => {
+                const date = new Date(entry.date);
+                return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+            });
+            
+            const prices = sortedHistory.map(entry => entry.price);
+            
+            // 创建图表
+            const ctx = container.querySelector('canvas').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${metal.name} 价格走势`,
+                        data: prices,
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: '价格 (元/吨)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '日期'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 设置类别点击事件
+        function setupCategoryClicks() {
+            const categories = categoryList.querySelectorAll('.metal-category');
+            categories.forEach(category => {
+                category.addEventListener('click', function() {
+                    metalNameInput.value = this.textContent;
+                    metalPriceInput.focus();
+                });
+            });
+        }
+        
+        // 计算涨跌百分比
+        function calculateChange(currentPrice, previousPrice) {
+            if (!previousPrice || previousPrice === 0) return 0;
+            return ((currentPrice - previousPrice) / previousPrice) * 100;
+        }
+        
+        // 格式化价格显示
+        function formatPrice(price) {
+            return price.toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 移除已有的通知
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // 创建新通知
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-weight: 500;
+                animation: slideDown 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                notification.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
